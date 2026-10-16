@@ -140,7 +140,7 @@
           <p>Tidak ada data cuaca yang sesuai dengan pencarian "{{ searchQuery }}".</p>
         </div>
 
-        <ion-list v-else :inset="true" class="weather-list">
+        <ion-list v-else :inset="false" class="weather-list">
           <ion-item v-for="(item, index) in filteredItems" :key="item.time" class="weather-item">
             <div slot="start" class="index-indicator">
               #{{ index + 1 }}
@@ -181,51 +181,71 @@
       </div>
 
       <!-- VIEW MODE 2: TABLE VIEW -->
-      <div v-if="!loading && forecastData && viewMode === 'table'" class="table-container">
+      <div v-if="!loading && forecastData && viewMode === 'table'" class="table-wrapper">
         <div v-if="filteredItems.length === 0" class="empty-state">
           <ion-icon :icon="cloudOutline" class="empty-icon" />
           <p>Tidak ada data cuaca yang sesuai dengan pencarian "{{ searchQuery }}".</p>
         </div>
 
-        <div v-else class="table-responsive">
-          <table class="weather-table">
-            <thead>
-              <tr>
-                <th class="th-num">No</th>
-                <th class="th-time">Waktu Pengukuran (<code>time</code>)</th>
-                <th class="th-temp">Suhu (<code>temperature_2m</code>)</th>
-                <th class="th-condition">Kategori Suhu</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(item, idx) in filteredItems"
-                :key="item.time"
-                :class="{ 'table-row-alt': idx % 2 === 1 }"
-              >
-                <td class="td-num">{{ idx + 1 }}</td>
-                <td class="td-time">
-                  <div class="td-time-formatted">
-                    <strong>{{ item.formattedDate }}</strong> • {{ item.formattedTime }} WIB
-                  </div>
-                  <div class="td-time-raw">
-                    <code>{{ item.time }}</code>
-                  </div>
-                </td>
-                <td class="td-temp">
-                  <span class="table-temp-pill" :class="getTempClass(item.temperature_2m)">
-                    {{ item.temperature_2m.toFixed(1) }} °C
-                  </span>
-                </td>
-                <td class="td-condition">
-                  <ion-badge :color="getTempBadgeColor(item.temperature_2m)" class="status-badge">
-                    {{ getTempLabel(item.temperature_2m) }}
-                  </ion-badge>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <ion-card v-else class="table-card">
+          <div class="table-responsive">
+            <table class="weather-table">
+              <thead>
+                <tr>
+                  <th class="th-num">No</th>
+                  <th class="th-time">
+                    <div class="th-content">
+                      <ion-icon :icon="timeOutline" class="th-icon" />
+                      <span>Waktu Pengukuran (<code>time</code>)</span>
+                    </div>
+                  </th>
+                  <th class="th-temp">
+                    <div class="th-content">
+                      <ion-icon :icon="thermometerOutline" class="th-icon" />
+                      <span>Suhu (<code>temperature_2m</code>)</span>
+                    </div>
+                  </th>
+                  <th class="th-condition">Kategori Suhu</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(item, idx) in filteredItems"
+                  :key="item.time"
+                  class="table-row"
+                  :class="{ 'table-row-even': idx % 2 === 1 }"
+                >
+                  <td class="td-num">
+                    <span class="num-badge">{{ idx + 1 }}</span>
+                  </td>
+                  <td class="td-time">
+                    <div class="td-time-formatted">
+                      <span class="date-part">{{ item.formattedDate }}</span>
+                      <span class="time-sep">•</span>
+                      <span class="time-part">{{ item.formattedTime }} WIB</span>
+                    </div>
+                    <div class="td-time-raw">
+                      <span class="raw-prefix">time:</span>
+                      <code>{{ item.time }}</code>
+                    </div>
+                  </td>
+                  <td class="td-temp">
+                    <span class="table-temp-pill" :class="getTempClass(item.temperature_2m)">
+                      <ion-icon :icon="thermometerOutline" class="temp-icon" />
+                      <span class="temp-val">{{ item.temperature_2m.toFixed(1) }}</span>
+                      <span class="temp-deg">°C</span>
+                    </span>
+                  </td>
+                  <td class="td-condition">
+                    <ion-badge :color="getTempBadgeColor(item.temperature_2m)" class="status-badge">
+                      {{ getTempLabel(item.temperature_2m) }}
+                    </ion-badge>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </ion-card>
       </div>
     </ion-content>
   </ion-page>
@@ -281,7 +301,7 @@ import { fetchWeatherForecast } from '@/services/weatherService';
 const forecastData = ref<WeatherForecastData | null>(null);
 const loading = ref<boolean>(false);
 const errorMessage = ref<string | null>(null);
-const viewMode = ref<'list' | 'table'>('list');
+const viewMode = ref<'list' | 'table'>('table');
 const searchQuery = ref<string>('');
 
 const loadWeather = async () => {
@@ -373,6 +393,7 @@ onMounted(() => {
   }
 }
 
+/* Hero Section */
 .hero-card {
   margin: 0 0 16px 0;
   border-radius: 14px;
@@ -518,11 +539,12 @@ onMounted(() => {
 }
 
 .field-badge {
-  background: var(--ion-color-step-100, #f1f5f9);
-  padding: 4px 8px;
+  background: rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.12);
+  border: 1px solid rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.25);
+  padding: 4px 10px;
   border-radius: 6px;
   font-size: 12px;
-  color: var(--ion-color-dark);
+  color: var(--ion-text-color, inherit);
 }
 
 .field-badge code {
@@ -530,21 +552,252 @@ onMounted(() => {
   font-weight: 700;
 }
 
-/* List View Styles */
-.weather-list {
+/* ==========================================================================
+   TABLE VIEW STYLES (Light & Dark Theme Adaptive)
+   ========================================================================== */
+.table-wrapper {
+  width: 100%;
+}
+
+.table-card {
+  margin: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--ion-border-color, rgba(128, 128, 128, 0.2));
+  background: var(--ion-card-background, #ffffff);
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.weather-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 14px;
+  color: var(--ion-text-color, #1f2937);
+}
+
+/* Table Header */
+.weather-table thead tr {
+  background: var(--ion-color-step-100, rgba(128, 128, 128, 0.08));
+}
+
+.weather-table th {
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--ion-text-color, #1f2937);
+  border-bottom: 2px solid var(--ion-border-color, rgba(128, 128, 128, 0.2));
+  white-space: nowrap;
+}
+
+.th-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.th-icon {
+  font-size: 16px;
+  color: var(--ion-color-primary, #3880ff);
+}
+
+.weather-table th code {
+  color: var(--ion-color-primary, #3880ff);
+  font-size: 11px;
+  background: rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+/* Table Rows */
+.table-row {
+  transition: background-color 0.15s ease;
   background: transparent;
+}
+
+.table-row:hover {
+  background-color: rgba(var(--ion-color-primary-rgb, 56, 128, 255), 0.08);
+}
+
+/* Subtle, theme-safe zebra stripe using rgba instead of hardcoded white */
+.table-row-even {
+  background-color: rgba(128, 128, 128, 0.06);
+}
+
+.weather-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--ion-border-color, rgba(128, 128, 128, 0.12));
+  vertical-align: middle;
+  color: var(--ion-text-color, #1f2937);
+}
+
+.th-num,
+.td-num {
+  text-align: center;
+  width: 60px;
+}
+
+.num-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ion-color-medium, #888888);
+  background: rgba(128, 128, 128, 0.14);
+}
+
+/* Date and Time Column */
+.td-time-formatted {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ion-text-color, #1f2937);
+  margin-bottom: 4px;
+}
+
+.date-part {
+  font-weight: 600;
+}
+
+.time-sep {
+  color: var(--ion-color-medium, #888888);
+  font-size: 12px;
+}
+
+.time-part {
+  font-weight: 700;
+  color: var(--ion-color-primary, #3880ff);
+}
+
+.td-time-raw {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.raw-prefix {
+  font-size: 11px;
+  color: var(--ion-color-medium, #888888);
+  font-weight: 600;
+}
+
+.td-time-raw code {
+  font-size: 11px;
+  color: var(--ion-text-color, #1f2937);
+  background: rgba(128, 128, 128, 0.12);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  font-family: monospace;
+}
+
+/* Temperature Pill */
+.table-temp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
+
+.temp-icon {
+  font-size: 14px;
+}
+
+.temp-val {
+  font-size: 15px;
+}
+
+.temp-deg {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* Status badge */
+.status-badge {
+  font-weight: 600;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 8px;
+}
+
+/* High contrast temperature theme badges */
+.temp-cool {
+  background: rgba(2, 132, 199, 0.16);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.35);
+}
+
+.temp-moderate {
+  background: rgba(217, 119, 6, 0.16);
+  color: #d97706;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+}
+
+.temp-warm {
+  background: rgba(220, 38, 38, 0.16);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+}
+
+/* Dark mode adjustments for temperature pills */
+@media (prefers-color-scheme: dark) {
+  .temp-cool {
+    background: rgba(56, 189, 248, 0.22);
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.45);
+  }
+
+  .temp-moderate {
+    background: rgba(251, 191, 36, 0.22);
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.45);
+  }
+
+  .temp-warm {
+    background: rgba(248, 113, 113, 0.22);
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.45);
+  }
+}
+
+/* ==========================================================================
+   LIST VIEW STYLES
+   ========================================================================== */
+.weather-list {
+  background: var(--ion-card-background, #ffffff);
   padding: 0;
   margin: 0;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--ion-border-color, rgba(128, 128, 128, 0.2));
 }
 
 .weather-item {
-  --padding-start: 12px;
-  --padding-end: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
   --inner-padding-end: 8px;
-  --border-color: var(--ion-color-step-150, #e2e8f0);
+  --border-color: var(--ion-border-color, rgba(128, 128, 128, 0.12));
+  --background: transparent;
+  color: var(--ion-text-color, inherit);
 }
 
 .index-indicator {
@@ -582,7 +835,7 @@ onMounted(() => {
 .time-text {
   font-size: 15px;
   font-weight: 600;
-  color: var(--ion-color-dark);
+  color: var(--ion-text-color, inherit);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -590,6 +843,7 @@ onMounted(() => {
 
 .hour-highlight {
   font-weight: 700;
+  color: var(--ion-color-primary, #3880ff);
 }
 
 .inline-icon {
@@ -613,21 +867,6 @@ onMounted(() => {
   font-size: 13px;
 }
 
-.temp-cool {
-  background-color: #e0f2fe;
-  color: #0369a1;
-}
-
-.temp-moderate {
-  background-color: #fef3c7;
-  color: #b45309;
-}
-
-.temp-warm {
-  background-color: #fee2e2;
-  color: #b91c1c;
-}
-
 .raw-field-row {
   display: flex;
   flex-wrap: wrap;
@@ -637,89 +876,12 @@ onMounted(() => {
 
 .raw-pill {
   font-size: 11px;
-  background: var(--ion-color-step-100, #f1f5f9);
-  color: var(--ion-color-step-700, #334155);
+  background: rgba(128, 128, 128, 0.12);
+  color: var(--ion-text-color, inherit);
+  border: 1px solid rgba(128, 128, 128, 0.2);
   padding: 2px 8px;
   border-radius: 4px;
   font-family: monospace;
-}
-
-/* Table View Styles */
-.table-container {
-  background: var(--ion-card-background, #ffffff);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid var(--ion-color-step-150, #e2e8f0);
-}
-
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.weather-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 14px;
-}
-
-.weather-table th {
-  background: var(--ion-color-step-100, #f8fafc);
-  color: var(--ion-color-dark);
-  font-weight: 600;
-  padding: 12px 14px;
-  border-bottom: 2px solid var(--ion-color-step-200, #e2e8f0);
-  white-space: nowrap;
-}
-
-.weather-table th code {
-  color: var(--ion-color-primary);
-  font-size: 12px;
-}
-
-.weather-table td {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--ion-color-step-150, #f1f5f9);
-  vertical-align: middle;
-}
-
-.table-row-alt {
-  background: var(--ion-color-step-50, #fdfdfd);
-}
-
-.td-num {
-  font-weight: 600;
-  color: var(--ion-color-medium);
-  width: 45px;
-}
-
-.td-time-formatted {
-  color: var(--ion-color-dark);
-  margin-bottom: 3px;
-}
-
-.td-time-raw code {
-  font-size: 11px;
-  color: var(--ion-color-medium);
-  background: var(--ion-color-step-100, #f1f5f9);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.table-temp-pill {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.status-badge {
-  font-weight: 600;
-  font-size: 12px;
-  padding: 4px 8px;
 }
 
 .empty-state {
